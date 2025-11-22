@@ -57,19 +57,19 @@ const FeedData = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
-  
+
   const handleNext = () => {
     if (currentPage < totalPages) {
       setCurrentPage(currentPage + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
-  
+
   const handleFirst = () => {
     setCurrentPage(1);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
-  
+
   const handleLast = () => {
     setCurrentPage(totalPages);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -167,13 +167,12 @@ const FeedData = () => {
                       <td className="px-3 py-3">
                         <div className="min-h-[60px] flex items-center">
                           <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${
-                              item.status === "approved"
+                            className={`px-2 py-1 rounded-full text-xs font-medium ${item.status === "approved"
                                 ? "bg-green-100 text-green-700"
                                 : item.status === "disapproved"
-                                ? "bg-red-100 text-red-700"
-                                : "bg-yellow-100 text-yellow-700"
-                            }`}
+                                  ? "bg-red-100 text-red-700"
+                                  : "bg-yellow-100 text-yellow-700"
+                              }`}
                           >
                             {item.status}
                           </span>
@@ -298,7 +297,7 @@ const FeedData = () => {
               setRowsPerPage(Number(e.target.value));
               setCurrentPage(1);
             }}
-            className="px-2 py-1 sm:px-3 sm:py-1 rounded border border-slate-300 bg-white text-sm"
+            className="px-2 mr-3 py-1 sm:px-3 sm:py-1 rounded border border-slate-300 bg-white text-sm"
           >
             <option value={20}>20</option>
             <option value={50}>50</option>
@@ -351,3 +350,5 @@ const FeedData = () => {
 };
 
 export default FeedData;
+
+
