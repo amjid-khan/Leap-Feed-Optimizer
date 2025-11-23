@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import authRoutes from "./routes/authRoutes.js";
 import merchantRoutes from "./routes/merchantRoutes.js";
+import productRoutes from "./routes/productRoutes.js";
 import cors from "cors"; // <-- import cors
 
 dotenv.config();
@@ -20,6 +21,7 @@ app.use(cors({
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/merchant", merchantRoutes);
+app.use("/api/products", productRoutes);
 
 connectDB();
 
