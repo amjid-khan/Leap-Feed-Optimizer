@@ -30,3 +30,4 @@ accountSchema.index({ userId: 1, merchantId: 1 }, { unique: true });
 
 export default mongoose.model("Account", accountSchema);
 
+
