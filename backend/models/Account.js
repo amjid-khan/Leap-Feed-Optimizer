@@ -15,8 +15,15 @@ const accountSchema = new mongoose.Schema(
         userId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
-            required: true,
+            default: null,
         },
+        authorizedEmails: [
+            {
+                type: String,
+                lowercase: true,
+                trim: true,
+            },
+        ],
         isActive: {
             type: Boolean,
             default: true,
@@ -26,7 +33,16 @@ const accountSchema = new mongoose.Schema(
 );
 
 // Index to ensure unique merchantId per user (same merchantId can be used by different users)
-accountSchema.index({ userId: 1, merchantId: 1 }, { unique: true });
+accountSchema.index(
+    { userId: 1, merchantId: 1 },
+    {
+        unique: true,
+        partialFilterExpression: { userId: { $type: "objectId" } },
+    }
+);
+
+// Allow quick lookups by authorized email
+accountSchema.index({ authorizedEmails: 1 });
 
 export default mongoose.model("Account", accountSchema);
 

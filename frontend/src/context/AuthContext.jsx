@@ -11,195 +11,33 @@ export const AuthProvider = ({ children }) => {
   const [accounts, setAccounts] = useState([]);
   const [selectedAccount, setSelectedAccount] = useState(null);
 
-  // Verify token and load user on mount
-  useEffect(() => {
-    const verifyAuth = async () => {
-      const token = localStorage.getItem("token");
-
-      // If no token, clear everything
-      if (!token) {
-        localStorage.removeItem("user");
-        setUser(null);
-        setLoading(false);
-        return;
-      }
-
-      // Verify token with backend
-      try {
-        const res = await axios.get(`${API}/api/auth/verify`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (res.data.success && res.data.user) {
-          setUser(res.data.user);
-          localStorage.setItem("user", JSON.stringify(res.data.user));
-        } else {
-          // Invalid token, clear everything
-          localStorage.removeItem("user");
-          localStorage.removeItem("token");
-          setUser(null);
-        }
-      } catch (err) {
-        // Token invalid or expired, clear everything
-        localStorage.removeItem("user");
-        localStorage.removeItem("token");
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    verifyAuth();
-  }, []);
-
-  // Load accounts when user is available
-  useEffect(() => {
-    if (user && !loading) {
-      loadUserAccounts();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user, loading]);
-
-  // Load user accounts
-  const loadUserAccounts = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      const res = await axios.get(`${API}/api/accounts`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (res.data.success) {
-        const accountsList = res.data.accounts || [];
-        setAccounts(accountsList);
-        
-        // If accounts exist and none selected, select first one
-        if (accountsList.length > 0 && !selectedAccount) {
-          const firstAccount = accountsList[0];
-          setSelectedAccount(firstAccount);
-          // Switch to first account on backend
-          try {
-            await axios.post(
-              `${API}/api/accounts/${firstAccount._id}/switch`,
-              {},
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                },
-              }
-            );
-          } catch (err) {
-            console.error("Error switching to first account:", err);
-          }
-        }
-      }
-    } catch (err) {
-      console.error("Error loading accounts:", err);
+  const persistUser = (userData) => {
+    if (userData) {
+      setUser(userData);
+      localStorage.setItem("user", JSON.stringify(userData));
+    } else {
+      setUser(null);
+      localStorage.removeItem("user");
     }
   };
 
-  // Register function
-  const register = async (name, email, password) => {
-    try {
-      const res = await axios.post(`${API}/api/auth/register`, {
-        name,
-        email,
-        password,
-      });
-      setUser(res.data.user);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-      localStorage.setItem("token", res.data.token);
-      return { success: true };
-    } catch (err) {
-      return { success: false, message: err.response?.data?.message || err.message };
-    }
+  const updateUserSelectedAccount = (accountId) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updatedUser = { ...prev, selectedAccount: accountId || null };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      return updatedUser;
+    });
   };
 
-  // Login function
-  const login = async (email, password) => {
-    try {
-      const res = await axios.post(`${API}/api/auth/login`, { email, password });
-      setUser(res.data.user);
-      localStorage.setItem("user", JSON.stringify(res.data.user));
-      localStorage.setItem("token", res.data.token);
-      // Load accounts after login
-      await loadUserAccounts();
-      return { success: true };
-    } catch (err) {
-      return { success: false, message: err.response?.data?.message || err.message };
-    }
-  };
-
-  // Logout function
-  const logout = () => {
-    setUser(null);
+  const clearSession = () => {
+    persistUser(null);
     setAccounts([]);
     setSelectedAccount(null);
-    localStorage.removeItem("user");
     localStorage.removeItem("token");
   };
 
-  // Account management functions
-  const fetchUserAccounts = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("No authentication token");
-
-      const res = await axios.get(`${API}/api/accounts`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (res.data.success) {
-        setAccounts(res.data.accounts || []);
-        return { success: true, accounts: res.data.accounts };
-      }
-      return { success: false, message: res.data.message };
-    } catch (err) {
-      return { success: false, message: err.response?.data?.message || err.message };
-    }
-  };
-
-  const addAccount = async (accountName, merchantId) => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("No authentication token");
-
-      const res = await axios.post(
-        `${API}/api/accounts`,
-        { accountName, merchantId },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      if (res.data.success) {
-        const newAccounts = [...accounts, res.data.account];
-        setAccounts(newAccounts);
-        
-        // If no account selected, select the new one
-        if (!selectedAccount) {
-          setSelectedAccount(res.data.account);
-          await switchAccount(res.data.account._id);
-        }
-        
-        return { success: true, account: res.data.account };
-      }
-      return { success: false, message: res.data.message };
-    } catch (err) {
-      return { success: false, message: err.response?.data?.message || err.message };
-    }
-  };
-
-  const switchAccount = async (accountId) => {
+  const persistSelectedAccount = async (accountId, fallbackAccount = null) => {
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("No authentication token");
@@ -215,10 +53,12 @@ export const AuthProvider = ({ children }) => {
       );
 
       if (res.data.success) {
-        const account = accounts.find((acc) => acc._id === accountId);
+        const account =
+          fallbackAccount || accounts.find((acc) => acc._id === accountId) || null;
         if (account) {
           setSelectedAccount(account);
         }
+        updateUserSelectedAccount(accountId);
         return { success: true, account: res.data.account };
       }
       return { success: false, message: res.data.message };
@@ -226,6 +66,136 @@ export const AuthProvider = ({ children }) => {
       return { success: false, message: err.response?.data?.message || err.message };
     }
   };
+
+  const syncAccounts = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return { success: false, message: "No authentication token" };
+
+      const res = await axios.get(`${API}/api/accounts`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (res.data.success) {
+        const accountsList = res.data.accounts || [];
+        setAccounts(accountsList);
+
+        if (accountsList.length === 0) {
+          setSelectedAccount(null);
+          updateUserSelectedAccount(null);
+          return { success: true, accounts: [] };
+        }
+
+        const preferredId = user?.selectedAccount;
+        const preferredAccount =
+          accountsList.find((acc) => acc._id === preferredId) || null;
+
+        if (preferredAccount) {
+          setSelectedAccount(preferredAccount);
+        } else {
+          const firstAccount = accountsList[0];
+          await persistSelectedAccount(firstAccount._id, firstAccount);
+        }
+
+        return { success: true, accounts: accountsList };
+      }
+      return { success: false, message: res.data.message };
+    } catch (err) {
+      console.error("Error loading accounts:", err);
+      return { success: false, message: err.response?.data?.message || err.message };
+    }
+  };
+
+  // Verify token and load user on mount
+  useEffect(() => {
+    const verifyAuth = async () => {
+      const token = localStorage.getItem("token");
+
+      // If no token, clear everything
+      if (!token) {
+        clearSession();
+        setLoading(false);
+        return;
+      }
+
+      // Verify token with backend
+      try {
+        const res = await axios.get(`${API}/api/auth/verify`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (res.data.success && res.data.user) {
+          persistUser(res.data.user);
+        } else {
+          // Invalid token, clear everything
+          clearSession();
+        }
+      } catch (err) {
+        // Token invalid or expired, clear everything
+        clearSession();
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    verifyAuth();
+  }, []);
+
+  // Load accounts when user is available
+  useEffect(() => {
+    if (user && !loading) {
+      syncAccounts();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, loading]);
+
+  // Load user accounts
+  const loadUserAccounts = syncAccounts;
+
+  // Register function
+  const register = async (name, email, password) => {
+    try {
+      const res = await axios.post(`${API}/api/auth/register`, {
+        name,
+        email,
+        password,
+      });
+      persistUser(res.data.user);
+      localStorage.setItem("token", res.data.token);
+      await syncAccounts();
+      return { success: true };
+    } catch (err) {
+      return { success: false, message: err.response?.data?.message || err.message };
+    }
+  };
+
+  // Login function
+  const login = async (email, password) => {
+    try {
+      const res = await axios.post(`${API}/api/auth/login`, { email, password });
+      persistUser(res.data.user);
+      localStorage.setItem("token", res.data.token);
+      // Load accounts after login
+      await loadUserAccounts();
+      return { success: true };
+    } catch (err) {
+      return { success: false, message: err.response?.data?.message || err.message };
+    }
+  };
+
+  // Logout function
+  const logout = () => {
+    clearSession();
+  };
+
+  // Account management functions
+  const fetchUserAccounts = async () => syncAccounts();
+
+  const switchAccount = async (accountId) => persistSelectedAccount(accountId);
 
   const deleteAccount = async (accountId) => {
     try {
@@ -245,10 +215,10 @@ export const AuthProvider = ({ children }) => {
         // If deleted account was selected, select first available
         if (selectedAccount?._id === accountId) {
           if (updatedAccounts.length > 0) {
-            setSelectedAccount(updatedAccounts[0]);
-            await switchAccount(updatedAccounts[0]._id);
+            await persistSelectedAccount(updatedAccounts[0]._id, updatedAccounts[0]);
           } else {
             setSelectedAccount(null);
+            updateUserSelectedAccount(null);
           }
         }
         
@@ -451,7 +421,6 @@ const fetchBrands = async () => {
         accounts,
         selectedAccount,
         fetchUserAccounts,
-        addAccount,
         switchAccount,
         deleteAccount,
         updateAccount,

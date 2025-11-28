@@ -2,27 +2,29 @@ import User from "../models/User.js";
 import { generateToken } from "../utils/token.js";
 import jwt from "jsonwebtoken";
 
+const formatUserResponse = (user) => ({
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    selectedAccount: user.selectedAccount || null,
+});
 
 // REGISTER
 export const registerUser = async (req, res) => {
     try {
         const { name, email, password } = req.body;
 
-
         if (!name || !email || !password)
             return res.status(400).json({ message: "All fields required" });
-
 
         const exists = await User.findOne({ email });
         if (exists) return res.status(400).json({ message: "Email already exists" });
 
-
         const user = await User.create({ name, email, password, role: "user" });
-
 
         res.status(201).json({
             message: "User Registered",
-            user: { id: user._id, name: user.name, email: user.email },
+            user: formatUserResponse(user),
             token: generateToken(user._id),
         });
     } catch (err) {
@@ -51,7 +53,7 @@ export const loginUser = async (req, res) => {
 
         res.json({
             message: "Login Successful",
-            user: { id: user._id, name: user.name, email: user.email },
+            user: formatUserResponse(user),
             token: generateToken(user._id),
         });
     } catch (err) {
@@ -90,7 +92,7 @@ export const verifyToken = async (req, res) => {
 
         res.json({
             success: true,
-            user: { id: user._id, name: user.name, email: user.email },
+            user: formatUserResponse(user),
         });
     } catch (err) {
         res.status(401).json({ success: false, message: "Invalid or expired token" });

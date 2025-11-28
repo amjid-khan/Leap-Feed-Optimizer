@@ -125,7 +125,7 @@ const FeedData = () => {
       )}
 
       {/* Header with title and search */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
+      <div className="flex flex-col sm:flex-row  p-3 rounded-md sm:items-center sm:justify-between gap-4 mb-4 sm:mb-6">
         <div>
           <h1 className="text-xl sm:text-2xl font-semibold text-slate-800">Feed Data</h1>
           <p className="text-sm text-slate-600 mt-1">
@@ -134,7 +134,7 @@ const FeedData = () => {
         </div>
         
         {/* Search Bar */}
-        <div className="w-full sm:w-auto sm:max-w-md">
+        <div className="w-full sm:w-260 sm:max-w-md">
           <div className="flex items-center gap-3 px-3 sm:px-4 py-2 sm:py-3 rounded-xl bg-white border border-slate-300 shadow-sm hover:shadow-md transition duration-300 focus-within:border-blue-500 focus-within:shadow-blue-100">
             <Search className="w-4 h-4 sm:w-5 sm:h-5 text-slate-500" />
             <input

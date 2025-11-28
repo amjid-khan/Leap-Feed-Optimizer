@@ -1,19 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
-import { X, Plus, Edit2, Trash2, Check, X as XIcon } from "lucide-react";
+import { X, Edit2, Trash2, Check } from "lucide-react";
 
 const AccountManagement = ({ isOpen, onClose }) => {
   const {
+    user,
     accounts,
     selectedAccount,
     fetchUserAccounts,
-    addAccount,
     switchAccount,
     deleteAccount,
     updateAccount,
   } = useAuth();
 
-  const [showAddForm, setShowAddForm] = useState(false);
   const [editingAccount, setEditingAccount] = useState(null);
   const [formData, setFormData] = useState({ accountName: "", merchantId: "" });
   const [loading, setLoading] = useState(false);
@@ -25,35 +24,15 @@ const AccountManagement = ({ isOpen, onClose }) => {
     }
   }, [isOpen]);
 
-  const handleAddAccount = async (e) => {
-    e.preventDefault();
-    setError("");
-    setLoading(true);
-
-    if (!formData.accountName || !formData.merchantId) {
-      setError("Please fill in all fields");
-      setLoading(false);
-      return;
-    }
-
-    const result = await addAccount(formData.accountName, formData.merchantId);
-    if (result.success) {
-      setFormData({ accountName: "", merchantId: "" });
-      setShowAddForm(false);
-      await fetchUserAccounts();
-    } else {
-      setError(result.message || "Failed to add account");
-    }
-    setLoading(false);
-  };
+  const canManageAccount = (account) => account.userId === user?.id;
 
   const handleEditAccount = (account) => {
+    if (!canManageAccount(account)) return;
     setEditingAccount(account);
     setFormData({
       accountName: account.accountName,
       merchantId: account.merchantId,
     });
-    setShowAddForm(false);
     setError("");
   };
 
@@ -116,7 +95,6 @@ const AccountManagement = ({ isOpen, onClose }) => {
 
   const handleCancel = () => {
     setFormData({ accountName: "", merchantId: "" });
-    setShowAddForm(false);
     setEditingAccount(null);
     setError("");
   };
@@ -146,13 +124,13 @@ const AccountManagement = ({ isOpen, onClose }) => {
           )}
 
           {/* Add/Edit Form */}
-          {(showAddForm || editingAccount) && (
+          {editingAccount && (
             <div className="mb-6 p-4 bg-gray-50 rounded-lg border border-gray-200">
               <h3 className="text-lg font-semibold mb-4">
-                {editingAccount ? "Edit Account" : "Add New Account"}
+                Edit Account
               </h3>
               <form
-                onSubmit={editingAccount ? handleUpdateAccount : handleAddAccount}
+                onSubmit={handleUpdateAccount}
                 className="space-y-4"
               >
                 <div>
@@ -192,7 +170,7 @@ const AccountManagement = ({ isOpen, onClose }) => {
                     className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   >
                     <Check className="w-4 h-4" />
-                    {editingAccount ? "Update" : "Add"} Account
+                    Update Account
                   </button>
                   <button
                     type="button"
@@ -211,20 +189,6 @@ const AccountManagement = ({ isOpen, onClose }) => {
           <div className="space-y-3">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold">Your Accounts</h3>
-              {!showAddForm && !editingAccount && (
-                <button
-                  onClick={() => {
-                    setShowAddForm(true);
-                    setEditingAccount(null);
-                    setFormData({ accountName: "", merchantId: "" });
-                    setError("");
-                  }}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add Account
-                </button>
-              )}
             </div>
 
             {accounts && accounts.length > 0 ? (
@@ -268,41 +232,36 @@ const AccountManagement = ({ isOpen, onClose }) => {
                           Switch
                         </button>
                       )}
-                      <button
-                        onClick={() => handleEditAccount(account)}
-                        disabled={loading}
-                        className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors disabled:opacity-50"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteAccount(account._id)}
-                        disabled={loading || accounts.length === 1}
-                        className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                        title={
-                          accounts.length === 1
-                            ? "Cannot delete the last account"
-                            : "Delete account"
-                        }
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      {canManageAccount(account) && (
+                        <>
+                          <button
+                            onClick={() => handleEditAccount(account)}
+                            disabled={loading}
+                            className="p-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors disabled:opacity-50"
+                          >
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteAccount(account._id)}
+                            disabled={loading || accounts.length === 1}
+                            className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                            title={
+                              accounts.length === 1
+                                ? "Cannot delete the last account"
+                                : "Delete account"
+                            }
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
               ))
             ) : (
               <div className="text-center py-8 text-gray-500">
-                <p className="mb-4">No accounts found.</p>
-                <button
-                  onClick={() => {
-                    setShowAddForm(true);
-                    setError("");
-                  }}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Add Your First Account
-                </button>
+                <p>No accounts found.</p>
               </div>
             )}
           </div>

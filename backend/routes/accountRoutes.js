@@ -2,7 +2,6 @@ import express from "express";
 import { protect } from "../middleware/authMiddleware.js";
 import {
     getUserAccounts,
-    addAccount,
     updateAccount,
     deleteAccount,
     getAccount,
@@ -15,7 +14,6 @@ const router = express.Router();
 router.use(protect);
 
 router.get("/", getUserAccounts);
-router.post("/", addAccount);
 router.get("/:id", getAccount);
 router.put("/:id", updateAccount);
 router.delete("/:id", deleteAccount);

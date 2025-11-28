@@ -7,6 +7,47 @@ const CACHE_DURATION = 10 * 60 * 1000; // 10 minutes cache (increased for better
 // ---- Added: Small helper to sleep Google API between pages to avoid rate limit
 const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
+const normalizeProductKey = (id, stripPrefix = false) => {
+    if (!id) return null;
+    const trimmed = id.toString().trim().toLowerCase();
+    if (!trimmed) return null;
+    if (!stripPrefix) return trimmed;
+    return trimmed.replace(/^online:[a-z]{2}:[a-z]{2}:/, "");
+};
+
+const recordStatusEntry = (map, rawId, statusData) => {
+    if (!rawId) return;
+    const fullKey = normalizeProductKey(rawId, false);
+    const shortKey = normalizeProductKey(rawId, true);
+
+    if (fullKey) {
+        map.set(fullKey, statusData);
+    }
+    if (shortKey && shortKey !== fullKey) {
+        map.set(shortKey, statusData);
+    }
+};
+
+const findStatusForProduct = (product, statusMap) => {
+    if (!product) return undefined;
+
+    const candidates = new Set();
+    if (product.id) {
+        candidates.add(normalizeProductKey(product.id, false));
+        candidates.add(normalizeProductKey(product.id, true));
+    }
+    if (product.offerId) {
+        candidates.add(normalizeProductKey(product.offerId, false));
+    }
+
+    for (const key of candidates) {
+        if (key && statusMap.has(key)) {
+            return statusMap.get(key);
+        }
+    }
+    return undefined;
+};
+
 const merchantService = {
 
     getTotalCount: async (merchantId) => {
@@ -88,22 +129,15 @@ const merchantService = {
                                 merchantId,
                                 maxResults: 250,
                                 pageToken: statusToken || undefined,
-                                fields: "nextPageToken,resources(productId,id,destinationStatuses,itemLevelIssues,product(productType,googleProductCategory))"
+                                fields: "nextPageToken,resources(productId,destinationStatuses,itemLevelIssues)"
                             });
 
                             if (statusRes.data?.resources) {
                                 statusRes.data.resources.forEach(ps => {
                                     // Store by both productId and id for better matching
-                                    const key = ps.productId || ps.id;
+                                    const key = ps.productId;
                                     if (key) {
-                                        statusMap.set(key, ps);
-                                        // Also store without prefix for better matching
-                                        if (key.includes(':')) {
-                                            const keyWithoutPrefix = key.split(':').pop();
-                                            if (keyWithoutPrefix) {
-                                                statusMap.set(keyWithoutPrefix, ps);
-                                            }
-                                        }
+                                        recordStatusEntry(statusMap, key, ps);
                                     }
                                 });
 
@@ -133,27 +167,11 @@ const merchantService = {
                     const formattedProducts = allProducts.map((p) => {
                         // Try multiple ways to match product status
                         const productId = p.id;
-                        let ps = statusMap.get(productId);
-
-                        // If not found, try without prefix (some APIs return different formats)
-                        if (!ps && productId) {
-                            const idWithoutPrefix = productId.replace(/^online:en:GB:/, '');
-                            ps = statusMap.get(idWithoutPrefix);
-                        }
-
-                        // If still not found, try reverse lookup
-                        if (!ps) {
-                            for (const [key, value] of statusMap.entries()) {
-                                if (key === productId || key === productId.replace(/^online:en:GB:/, '')) {
-                                    ps = value;
-                                    break;
-                                }
-                            }
-                        }
+                        let ps = findStatusForProduct(p, statusMap);
 
                         // Debug: Log first few products to see matching
                         if (allProducts.indexOf(p) < 3) {
-                            console.log(`[DEBUG] Product ${p.id}: statusMap has ${statusMap.has(productId)} entries, ps found: ${!!ps}`);
+                            console.log(`[DEBUG] Product ${p.id}: statusMap has ${statusMap.has(normalizeProductKey(productId, false))} entries, ps found: ${!!ps}`);
                             if (ps) {
                                 console.log(`[DEBUG] Product ${p.id}: destinationStatuses:`, JSON.stringify(ps.destinationStatuses));
                             }
@@ -161,19 +179,8 @@ const merchantService = {
 
                         // Get productType from productstatuses
                         let productType = "-";
-                        if (ps?.product?.productType) {
-                            productType = Array.isArray(ps.product.productType)
-                                ? ps.product.productType.join(" > ")
-                                : ps.product.productType;
-                        }
-
-                        // Get googleCategory from productstatuses
+                        // We no longer fetch productType/category from productstatuses due to API limits
                         let googleCategory = "-";
-                        if (ps?.product?.googleProductCategory) {
-                            googleCategory = Array.isArray(ps.product.googleProductCategory)
-                                ? ps.product.googleProductCategory.join(" > ")
-                                : ps.product.googleProductCategory;
-                        }
 
                         // Get status from destinationStatuses - improved logic
                         let status = "unknown";

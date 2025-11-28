@@ -12,24 +12,16 @@ const Form = () => {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [formDisabled, setFormDisabled] = useState(false);
 
   const resetForm = () => {
     setName("");
     setEmail("");
     setPassword("");
     setError("");
-    setFormDisabled(false);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!isLogin) {
-      setFormDisabled(true);
-      setError("Registration is disabled for this demo project. Please use login instead.");
-      return;
-    }
 
     setError("");
     setLoading(true);
@@ -54,17 +46,7 @@ const Form = () => {
   const handleToggle = () => {
     const newIsLogin = !isLogin;
     setIsLogin(newIsLogin);
-    
-    if (!newIsLogin) {
-      // If switching to register, disable the form
-      setFormDisabled(true);
-      setError("Registration is disabled for this demo project. Please use login instead.");
-    } else {
-      // If switching to login, enable the form
-      setFormDisabled(false);
-      setError("");
-    }
-    
+    setError("");
     resetForm();
   };
 
@@ -75,39 +57,14 @@ const Form = () => {
         <div className="md:w-1/2 bg-gradient-to-br from-blue-600 to-indigo-700 text-white p-8 md:p-12 flex flex-col justify-center">
           <div className="max-w-md mx-auto">
             <h1 className="text-3xl md:text-4xl font-bold mb-6">
-              {isLogin ? "Welcome to Our Platform" : "Project Demo Notice"}
+              {isLogin ? "Welcome Back" : "Create Your Account"}
             </h1>
             
-            {isLogin ? (
-              <p className="text-blue-100 text-lg mb-6 leading-relaxed">
-                Welcome back! Sign in to continue your journey and access your personalized dashboard.
-              </p>
-            ) : (
-              <div className="space-y-6">
-                <div className="bg-red-500/20 border border-red-400/30 rounded-lg p-6">
-                  <h3 className="text-xl font-bold mb-3 text-white">🚫 Registration Disabled</h3>
-                  <p className="text-red-100 text-lg leading-relaxed">
-                    This is a personal project demonstration. User registration has been disabled 
-                    as this is not a production system.
-                  </p>
-                </div>
-                
-                <div className="bg-blue-500/20 border border-blue-400/30 rounded-lg p-4">
-                  <p className="text-blue-100 text-sm">
-                    <span className="font-semibold">Note:</span> You are not authorized to register 
-                    in this demo environment. Please use the login functionality with existing demo 
-                    credentials, or switch back to login mode.
-                  </p>
-                </div>
-                
-                <div className="bg-yellow-500/20 border border-yellow-400/30 rounded-lg p-4">
-                  <p className="text-yellow-100 text-sm">
-                    <span className="font-semibold">For Testing:</span> If you need to test the registration 
-                    flow, please contact the project administrator for access to the development environment.
-                  </p>
-                </div>
-              </div>
-            )}
+            <p className="text-blue-100 text-lg mb-6 leading-relaxed">
+              {isLogin
+                ? "Sign in to manage your Google Merchant Center feeds, accounts, and performance."
+                : "Register to link your Google Merchant Center accounts and monitor real-time performance from a single dashboard."}
+            </p>
             
             <div className="mt-8 flex items-center space-x-4">
               <div className="w-3 h-3 bg-white rounded-full"></div>
@@ -122,10 +79,10 @@ const Form = () => {
           <div className="w-full max-w-md">
             <div className="text-center mb-8">
               <h2 className="text-3xl font-bold text-gray-800">
-                {isLogin ? "Welcome Back" : "Registration Disabled"}
+                {isLogin ? "Welcome Back" : "Create Account"}
               </h2>
               <p className="text-gray-600 mt-2">
-                {isLogin ? "Sign in to your account" : "Demo mode - Registration unavailable"}
+                {isLogin ? "Sign in to your account" : "Register to get started"}
               </p>
             </div>
 
@@ -139,8 +96,8 @@ const Form = () => {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               {!isLogin && (
-                <div className="opacity-60">
-                  <label className="block text-sm font-medium text-gray-500 mb-2">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Full Name
                   </label>
                   <input
@@ -148,17 +105,14 @@ const Form = () => {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Enter your name"
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 cursor-not-allowed"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
                     required={!isLogin}
-                    disabled={formDisabled}
                   />
                 </div>
               )}
 
-              <div className={!isLogin ? "opacity-60" : ""}>
-                <label className={`block text-sm font-medium ${
-                  !isLogin ? 'text-gray-500' : 'text-gray-700'
-                } mb-2`}>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Email Address
                 </label>
                 <input
@@ -166,18 +120,13 @@ const Form = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
-                  className={`w-full px-4 py-3 border border-gray-300 rounded-lg ${
-                    !isLogin ? 'bg-gray-50 cursor-not-allowed' : 'focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                  } transition duration-200`}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
                   required
-                  disabled={formDisabled}
                 />
               </div>
 
-              <div className={!isLogin ? "opacity-60" : ""}>
-                <label className={`block text-sm font-medium ${
-                  !isLogin ? 'text-gray-500' : 'text-gray-700'
-                } mb-2`}>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   Password
                 </label>
                 <input
@@ -185,22 +134,19 @@ const Form = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className={`w-full px-4 py-3 border border-gray-300 rounded-lg ${
-                    !isLogin ? 'bg-gray-50 cursor-not-allowed' : 'focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                  } transition duration-200`}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
                   required
-                  disabled={formDisabled}
                 />
               </div>
 
               <button
                 type="submit"
-                disabled={loading || formDisabled}
+                disabled={loading}
                 className={`w-full py-3 px-4 rounded-lg focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 font-medium ${
-                  !isLogin 
-                    ? 'bg-gray-400 text-gray-700 cursor-not-allowed' 
-                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700'
-                } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  loading
+                    ? "bg-blue-300 cursor-not-allowed text-white"
+                    : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700"
+                }`}
               >
                 {loading ? (
                   <span className="flex items-center justify-center">
@@ -213,7 +159,7 @@ const Form = () => {
                 ) : isLogin ? (
                   "Sign In"
                 ) : (
-                  "Registration Disabled"
+                  "Create Account"
                 )}
               </button>
             </form>
@@ -229,14 +175,6 @@ const Form = () => {
                 </button>
               </p>
             </div>
-
-            {!isLogin && (
-              <div className="mt-6 p-4 bg-orange-50 border border-orange-200 rounded-lg text-center">
-                <p className="text-orange-700 text-sm">
-                  💡 <strong>Demo Tip:</strong> Switch back to Login to access the demo
-                </p>
-              </div>
-            )}
           </div>
         </div>
       </div>

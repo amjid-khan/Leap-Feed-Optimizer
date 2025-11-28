@@ -1,68 +1,41 @@
 import Account from "../models/Account.js";
 import User from "../models/User.js";
 
+const normalizeEmail = (email = "") => email.trim().toLowerCase();
+
+const buildAccessQuery = (user) => {
+    const clauses = [{ userId: user._id }];
+    if (user.email) {
+        clauses.push({ authorizedEmails: normalizeEmail(user.email) });
+    }
+    return { $or: clauses };
+};
+
+const isOwner = (account, userId) =>
+    account.userId && account.userId.toString() === userId.toString();
+
+const hasEmailAccess = (account, email) =>
+    Array.isArray(account.authorizedEmails) &&
+    account.authorizedEmails.some((addr) => addr === normalizeEmail(email));
+
+const userCanAccessAccount = (account, user) =>
+    isOwner(account, user._id) || hasEmailAccess(account, user.email);
+
 // Get all accounts for logged-in user
 export const getUserAccounts = async (req, res) => {
     try {
-        const userId = req.user._id;
-        const accounts = await Account.find({ userId }).sort({ createdAt: -1 });
-        
+        const accounts = await Account.find(buildAccessQuery(req.user)).sort({
+            createdAt: -1,
+        });
+
         res.status(200).json({
             success: true,
-            accounts: accounts,
+            accounts,
         });
     } catch (error) {
         res.status(500).json({
             success: false,
             message: "Failed to fetch accounts",
-            error: error.message,
-        });
-    }
-};
-
-// Add new account
-export const addAccount = async (req, res) => {
-    try {
-        const { accountName, merchantId } = req.body;
-        const userId = req.user._id;
-
-        if (!accountName || !merchantId) {
-            return res.status(400).json({
-                success: false,
-                message: "Account name and merchant ID are required",
-            });
-        }
-
-        // Check if account already exists for this user
-        const existingAccount = await Account.findOne({ userId, merchantId });
-        if (existingAccount) {
-            return res.status(400).json({
-                success: false,
-                message: "Account with this merchant ID already exists",
-            });
-        }
-
-        const account = await Account.create({
-            accountName,
-            merchantId,
-            userId,
-        });
-
-        res.status(201).json({
-            success: true,
-            message: "Account added successfully",
-            account: account,
-        });
-    } catch (error) {
-        if (error.code === 11000) {
-            return res.status(400).json({
-                success: false,
-                message: "Account with this merchant ID already exists",
-            });
-        }
-        res.status(500).json({
-            success: false,
-            message: "Failed to add account",
             error: error.message,
         });
     }
@@ -75,7 +48,7 @@ export const updateAccount = async (req, res) => {
         const { accountName, merchantId } = req.body;
         const userId = req.user._id;
 
-        const account = await Account.findOne({ _id: id, userId });
+        const account = await Account.findById(id);
         if (!account) {
             return res.status(404).json({
                 success: false,
@@ -83,9 +56,19 @@ export const updateAccount = async (req, res) => {
             });
         }
 
+        if (!isOwner(account, userId)) {
+            return res.status(403).json({
+                success: false,
+                message: "You do not have permission to update this account",
+            });
+        }
+
         // Check if merchantId is being changed and if it conflicts
         if (merchantId && merchantId !== account.merchantId) {
-            const existingAccount = await Account.findOne({ userId, merchantId });
+            const existingAccount = await Account.findOne({
+                userId,
+                merchantId,
+            });
             if (existingAccount) {
                 return res.status(400).json({
                     success: false,
@@ -119,7 +102,7 @@ export const deleteAccount = async (req, res) => {
         const { id } = req.params;
         const userId = req.user._id;
 
-        const account = await Account.findOne({ _id: id, userId });
+        const account = await Account.findById(id);
         if (!account) {
             return res.status(404).json({
                 success: false,
@@ -127,7 +110,21 @@ export const deleteAccount = async (req, res) => {
             });
         }
 
+        if (!isOwner(account, userId)) {
+            return res.status(403).json({
+                success: false,
+                message: "You do not have permission to delete this account",
+            });
+        }
+
         await Account.findByIdAndDelete(id);
+
+        // Clear selected account for owner if necessary
+        const owner = await User.findById(userId);
+        if (owner && owner.selectedAccount && owner.selectedAccount.toString() === id) {
+            owner.selectedAccount = null;
+            await owner.save();
+        }
 
         res.status(200).json({
             success: true,
@@ -146,13 +143,20 @@ export const deleteAccount = async (req, res) => {
 export const getAccount = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user._id;
+        const user = req.user;
 
-        const account = await Account.findOne({ _id: id, userId });
+        const account = await Account.findById(id);
         if (!account) {
             return res.status(404).json({
                 success: false,
                 message: "Account not found",
+            });
+        }
+
+        if (!userCanAccessAccount(account, user)) {
+            return res.status(403).json({
+                success: false,
+                message: "You do not have access to this account",
             });
         }
 
@@ -173,9 +177,9 @@ export const getAccount = async (req, res) => {
 export const switchAccount = async (req, res) => {
     try {
         const { id } = req.params;
-        const userId = req.user._id;
+        const user = req.user;
 
-        const account = await Account.findOne({ _id: id, userId });
+        const account = await Account.findById(id);
         if (!account) {
             return res.status(404).json({
                 success: false,
@@ -183,10 +187,17 @@ export const switchAccount = async (req, res) => {
             });
         }
 
+        if (!userCanAccessAccount(account, user)) {
+            return res.status(403).json({
+                success: false,
+                message: "You do not have access to this account",
+            });
+        }
+
         // Update user's selected account
-        const user = await User.findById(userId);
-        user.selectedAccount = account._id;
-        await user.save();
+        const dbUser = await User.findById(user._id);
+        dbUser.selectedAccount = account._id;
+        await dbUser.save();
 
         res.status(200).json({
             success: true,
