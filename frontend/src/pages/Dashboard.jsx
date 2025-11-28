@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
-import { Package, CheckCircle2, Clock, TrendingUp, BarChart3, PieChart as PieChartIcon } from "lucide-react";
+import { Package, CheckCircle2, Clock, BarChart3, PieChart as PieChartIcon, XCircle } from "lucide-react";
 import axios from "axios";
 import { PieChart, Pie, Cell, ResponsiveContainer, LineChart, Line, Area, AreaChart, RadialBarChart, RadialBar, Tooltip } from "recharts";
 
@@ -74,14 +74,22 @@ const Dashboard = () => {
   const totalProductsData = generateSmoothData(stats.totalProducts);
   const approvedData = generateSmoothData(stats.approvedProducts);
   const pendingData = generateSmoothData(stats.pendingProducts);
-  const approvalRateValue = parseFloat(stats.approvalRate) || 0;
-  const approvalRateData = generateSmoothData(approvalRateValue);
+  const disapprovedData = generateSmoothData(stats.disapprovedProducts);
+  const disapprovedPercentage = stats.totalProducts > 0
+    ? ((stats.disapprovedProducts / stats.totalProducts) * 100).toFixed(1)
+    : "0.0";
 
-  // Data for main charts - Real data usage
+  const totalDistribution =
+    (stats.approvedProducts || 0) +
+    (stats.pendingProducts || 0) +
+    (stats.disapprovedProducts || 0);
+
+  const hasDistributionData = totalDistribution > 0;
+
   const pieChartData = [
-    { name: "Approved", value: stats.approvedProducts || 1, color: "#86efac" },
-    { name: "Pending", value: stats.pendingProducts || 1, color: "#fde047" },
-    { name: "Disapproved", value: stats.disapprovedProducts || 1, color: "#fca5a5" }
+    { name: "Approved", value: stats.approvedProducts || 0, color: "#86efac" },
+    { name: "Pending", value: stats.pendingProducts || 0, color: "#fde047" },
+    { name: "Disapproved", value: stats.disapprovedProducts || 0, color: "#fca5a5" }
   ];
 
   // Radial chart data for Product Statistics
@@ -132,13 +140,14 @@ const Dashboard = () => {
       chartColor: "#fbbf24"
     },
     {
-      title: "Approval Rate",
-      value: stats.approvalRate,
-      icon: TrendingUp,
-      iconBg: "bg-purple-50",
-      iconColor: "text-purple-500",
-      chartData: approvalRateData,
-      chartColor: "#a78bfa"
+      title: "Disapproved",
+      value: formatNumber(stats.disapprovedProducts),
+      subtitle: `${disapprovedPercentage}% of total`,
+      icon: XCircle,
+      iconBg: "bg-red-50",
+      iconColor: "text-red-500",
+      chartData: disapprovedData,
+      chartColor: "#f87171"
     }
   ];
 
@@ -196,7 +205,10 @@ const Dashboard = () => {
                   <h3 className="text-gray-500 text-xs font-medium mb-1.5 uppercase tracking-wide">
                     {stat.title}
                   </h3>
-                  <p className="text-2xl font-bold text-gray-800 mb-3">{stat.value}</p>
+                  <p className="text-2xl font-bold text-gray-800 mb-1">{stat.value}</p>
+                  {stat.subtitle && (
+                    <p className="text-xs font-semibold text-gray-500 mb-2">{stat.subtitle}</p>
+                  )}
                   
                   {/* Smooth Curly Chart */}
                   <ResponsiveContainer width="100%" height={50}>
@@ -237,35 +249,55 @@ const Dashboard = () => {
                   Product Distribution
                 </h2>
               </div>
-              <ResponsiveContainer width="100%" height={260}>
-                <PieChart>
-                  <Pie
-                    data={pieChartData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={70}
-                    outerRadius={95}
-                    paddingAngle={4}
-                    dataKey="value"
-                  >
-                    {pieChartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} stroke="white" strokeWidth={2} />
+              {hasDistributionData ? (
+                <>
+                  <ResponsiveContainer width="100%" height={260}>
+                    <PieChart>
+                      <Pie
+                        data={pieChartData}
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={70}
+                        outerRadius={95}
+                        paddingAngle={4}
+                        dataKey="value"
+                      >
+                        {pieChartData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} stroke="white" strokeWidth={2} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value, name) => [
+                          `${formatNumber(value)} (${((value / totalDistribution) * 100).toFixed(1)}%)`,
+                          name
+                        ]}
+                        contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="flex justify-center gap-6 mt-2 flex-wrap">
+                    {pieChartData.map((item, index) => (
+                      <div key={index} className="flex flex-col items-center">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
+                          <span className="text-xs font-medium text-gray-600">
+                            {item.name}
+                          </span>
+                        </div>
+                        <span className="text-xs text-gray-500 font-semibold">
+                          {formatNumber(item.value)} ({totalDistribution > 0 ? ((item.value / totalDistribution) * 100).toFixed(1) : "0.0"}%)
+                        </span>
+                      </div>
                     ))}
-                  </Pie>
-                  <Tooltip 
-                    formatter={(value) => formatNumber(value)}
-                    contentStyle={{ borderRadius: '8px', border: '1px solid #e5e7eb' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-              <div className="flex justify-center gap-6 mt-2">
-                {pieChartData.map((item, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
-                    <span className="text-xs font-medium text-gray-600">{item.name}</span>
                   </div>
-                ))}
-              </div>
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-[260px] text-center text-gray-500">
+                  <PieChartIcon className="w-10 h-10 text-gray-300 mb-3" />
+                  <p className="font-medium">No product distribution data yet</p>
+                  <p className="text-sm text-gray-400">Add products to see real-time breakdown.</p>
+                </div>
+              )}
             </div>
 
             {/* Radial Bar Chart */}

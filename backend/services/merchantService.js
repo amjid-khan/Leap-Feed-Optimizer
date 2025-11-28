@@ -204,11 +204,29 @@ const merchantService = {
 
                                 // Normalize status values
                                 if (status && status !== "unknown") {
-                                    status = status.toLowerCase();
-                                    // Map common variations
-                                    if (status.includes('approve')) status = "approved";
-                                    else if (status.includes('disapprove')) status = "disapproved";
-                                    else if (status.includes('pend')) status = "pending";
+                                    const normalized = status.toLowerCase().replace(/\s+/g, "_");
+
+                                    const isApproved =
+                                        normalized === "approved" ||
+                                        normalized === "fully_approved" ||
+                                        normalized === "active";
+
+                                    const isPending =
+                                        normalized === "pending" ||
+                                        normalized === "under_review" ||
+                                        normalized === "in_review";
+
+                                    const isDisapproved =
+                                        normalized === "disapproved" ||
+                                        normalized === "not_approved" ||
+                                        normalized === "disapproved_explanation" ||
+                                        normalized.includes("disapproved") ||
+                                        normalized.includes("not_approved");
+
+                                    if (isApproved) status = "approved";
+                                    else if (isPending) status = "pending";
+                                    else if (isDisapproved) status = "disapproved";
+                                    else status = normalized;
                                 }
                             }
 
