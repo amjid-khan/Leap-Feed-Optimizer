@@ -6,6 +6,7 @@ const formatUserResponse = (user) => ({
     id: user._id,
     name: user.name,
     email: user.email,
+    image: user.googlePicture || null, // Map googlePicture to image for frontend
     selectedAccount: user.selectedAccount || null,
 });
 
