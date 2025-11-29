@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 import Form from "./pages/Form.jsx";
 import Dashboard from "./pages/Dashboard.jsx";
 import FeedData from "./component/FeedData.jsx";
@@ -8,8 +8,41 @@ import { useAuth } from "./context/AuthContext.jsx";
 
 // ProtectedRoute for pages only accessible if logged in
 const ProtectedRoute = ({ children }) => {
-  const { user, loading, isAuthenticated } = useAuth();
+  const { user, loading, isAuthenticated, loginWithToken } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+
+  // Handle token coming from Google OAuth redirect (?token=...)
+  const searchParams = new URLSearchParams(location.search);
+  const urlToken = searchParams.get("token");
+  const storedToken = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  // If we have a token in URL but not yet stored, process it
+  if (urlToken && !storedToken) {
+    // Temporarily show loading UI while we process token
+    // Note: we can't use useEffect here easily, so we trigger async login
+    // and rely on the redirect to re-render.
+    loginWithToken(urlToken).then((res) => {
+      if (res?.success) {
+        // Clean URL and go to admin dashboard without token in query
+        navigate("/admin", { replace: true });
+      } else {
+        navigate("/", {
+          replace: true,
+          state: { error: res?.message || "Google login failed. Please try again." },
+        });
+      }
+    });
+
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-100">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
+          <p className="text-gray-600">Completing Google login...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Show loading while checking auth - but only briefly
   if (loading) {

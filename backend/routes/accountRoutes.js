@@ -6,6 +6,8 @@ import {
     deleteAccount,
     getAccount,
     switchAccount,
+    syncAccounts,
+    testMerchantAccess,
 } from "../controllers/accountController.js";
 
 const router = express.Router();
@@ -14,6 +16,8 @@ const router = express.Router();
 router.use(protect);
 
 router.get("/", getUserAccounts);
+router.post("/sync", syncAccounts); // Manual sync endpoint
+router.get("/test/:merchantId", testMerchantAccess); // Test merchant ID access
 router.get("/:id", getAccount);
 router.put("/:id", updateAccount);
 router.delete("/:id", deleteAccount);

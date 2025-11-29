@@ -169,70 +169,71 @@ const FeedData = () => {
 
             <tbody>
               {loading ? (
-                // Skeleton Loading Rows
+                // Skeleton Loading Rows - Fixed alignment
                 Array.from({ length: rowsPerPage }).map((_, index) => (
                   <tr key={`skeleton-${index}`} className="border-t animate-pulse">
                     {/* Status Skeleton */}
                     <td className="px-3 py-3">
-                      <div className="min-h-[60px] flex items-center">
+                      <div className="h-[60px] flex items-center justify-center">
                         <div className="h-6 w-16 bg-slate-200 rounded-full"></div>
                       </div>
                     </td>
-                    {/* ID Skeleton */}
+                    {/* ID Skeleton - Fixed alignment */}
                     <td className="px-3 py-3">
-                      <div className="min-h-[60px] flex items-start">
+                      <div className="h-[60px] flex items-center justify-center">
                         <div className="h-4 w-48 bg-slate-200 rounded"></div>
                       </div>
                     </td>
                     {/* Image Skeleton */}
                     <td className="px-3 py-3">
-                      <div className="min-h-[60px] flex items-center">
+                      <div className="h-[60px] flex items-center justify-center">
                         <div className="w-10 h-10 bg-slate-200 rounded-lg"></div>
                       </div>
                     </td>
                     {/* Title Skeleton */}
                     <td className="px-3 py-3">
-                      <div className="min-h-[60px] flex items-start">
+                      <div className="h-[60px] flex items-center">
                         <div className="h-4 w-full bg-slate-200 rounded"></div>
                       </div>
                     </td>
                     {/* Description Skeleton */}
                     <td className="px-3 py-3">
-                      <div className="min-h-[60px] flex items-start gap-2">
+                      <div className="h-[60px] flex items-center gap-2">
                         <div className="flex-1 space-y-2">
                           <div className="h-3 w-full bg-slate-200 rounded"></div>
                           <div className="h-3 w-4/5 bg-slate-200 rounded"></div>
                           <div className="h-3 w-3/5 bg-slate-200 rounded"></div>
                         </div>
+                        <div className="w-4 h-4 bg-slate-200 rounded"></div>
                       </div>
                     </td>
                     {/* Brand Skeleton */}
                     <td className="px-3 py-3">
-                      <div className="min-h-[60px] flex items-center">
+                      <div className="h-[60px] flex items-center justify-center">
                         <div className="h-4 w-24 bg-slate-200 rounded"></div>
                       </div>
                     </td>
                     {/* Feed Label Skeleton */}
                     <td className="px-3 py-3">
-                      <div className="min-h-[60px] flex items-center">
+                      <div className="h-[60px] flex items-center justify-center">
                         <div className="h-4 w-20 bg-slate-200 rounded"></div>
                       </div>
                     </td>
                     {/* Product Type Skeleton */}
                     <td className="px-3 py-3">
-                      <div className="min-h-[60px] flex items-center">
+                      <div className="h-[60px] flex items-center justify-center">
                         <div className="h-4 w-32 bg-slate-200 rounded"></div>
                       </div>
                     </td>
                     {/* Google Category Skeleton */}
                     <td className="px-3 py-3">
-                      <div className="min-h-[60px] flex items-center">
+                      <div className="h-[60px] flex items-center justify-center">
                         <div className="h-4 w-40 bg-slate-200 rounded"></div>
                       </div>
                     </td>
                     {/* Action Skeleton */}
                     <td className="px-3 py-3">
-                      <div className="min-h-[60px] flex items-center">
+                      <div className="h-[60px] flex items-center justify-center">
                         <div className="h-8 w-20 bg-slate-200 rounded"></div>
                       </div>
                     </td>
@@ -249,7 +250,7 @@ const FeedData = () => {
                     <tr key={item.id || index} className="border-t hover:bg-slate-50 transition">
                       {/* Status */}
                       <td className="px-3 py-3">
-                        <div className="min-h-[60px] flex items-center">
+                        <div className="h-[60px] flex items-center justify-center">
                           <span
                             className={`px-2 py-1 rounded-full text-xs font-medium ${item.status === "approved"
                                 ? "bg-green-100 text-green-700"
@@ -263,9 +264,9 @@ const FeedData = () => {
                         </div>
                       </td>
 
-                      {/* ID - Cleaned and full content show with increased width */}
+                      {/* ID - Cleaned and properly centered */}
                       <td className="px-3 py-3">
-                        <div className="min-h-[60px] flex items-start">
+                        <div className="h-[60px] flex items-center justify-center">
                           <span className="font-mono text-xs text-slate-700 leading-tight break-all whitespace-normal line-clamp-3">
                             {cleanId(item.id)}
                           </span>
@@ -274,7 +275,7 @@ const FeedData = () => {
 
                       {/* Image */}
                       <td className="px-3 py-3">
-                        <div className="min-h-[60px] flex items-center">
+                        <div className="h-[60px] flex items-center justify-center">
                           <img
                             src={item.imageLink}
                             alt={item.title}
@@ -288,16 +289,16 @@ const FeedData = () => {
 
                       {/* Title - Full content show with increased width */}
                       <td className="px-3 py-3">
-                        <div className="min-h-[60px] flex items-start">
+                        <div className="h-[60px] flex items-center">
                           <span className="font-medium text-slate-800 text-sm leading-tight whitespace-normal line-clamp-3">
                             {item.title}
                           </span>
                         </div>
                       </td>
 
-                      {/* Description - 3 lines with view icon */}
+                      {/* Description - 3 lines with view icon that shows only on hover */}
                       <td className="px-3 py-3">
-                        <div className="min-h-[60px] flex items-start gap-2 group">
+                        <div className="h-[60px] flex items-center gap-2 group">
                           <div className="flex-1">
                             <span className="text-slate-600 text-sm leading-tight line-clamp-3">
                               {item.description}
@@ -306,7 +307,7 @@ const FeedData = () => {
                           {item.description && item.description.length > 100 && (
                             <button
                               onClick={() => handleViewDescription(item.description)}
-                              className="opacity-70 group-hover:opacity-100 transition-opacity duration-200 p-1 hover:bg-slate-200 rounded"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity duration-200 p-1 hover:bg-slate-200 rounded"
                               title="View full description"
                             >
                               <Eye className="w-4 h-4 text-slate-500" />
@@ -317,7 +318,7 @@ const FeedData = () => {
 
                       {/* Brand */}
                       <td className="px-3 py-3">
-                        <div className="min-h-[60px] flex items-center">
+                        <div className="h-[60px] flex items-center justify-center">
                           <span className="text-slate-700 text-sm line-clamp-2">
                             {item.brand}
                           </span>
@@ -326,7 +327,7 @@ const FeedData = () => {
 
                       {/* Feed Label */}
                       <td className="px-3 py-3">
-                        <div className="min-h-[60px] flex items-center">
+                        <div className="h-[60px] flex items-center justify-center">
                           <span className="text-slate-700 text-sm line-clamp-2">
                             {item.feedLabel}
                           </span>
@@ -335,7 +336,7 @@ const FeedData = () => {
 
                       {/* Product Type */}
                       <td className="px-3 py-3">
-                        <div className="min-h-[60px] flex items-center">
+                        <div className="h-[60px] flex items-center justify-center">
                           <span className="text-slate-700 text-sm leading-tight line-clamp-3">
                             {item.productType}
                           </span>
@@ -344,7 +345,7 @@ const FeedData = () => {
 
                       {/* Google Category */}
                       <td className="px-3 py-3">
-                        <div className="min-h-[60px] flex items-center">
+                        <div className="h-[60px] flex items-center justify-center">
                           <span className="text-slate-700 text-sm leading-tight line-clamp-3">
                             {item.googleCategory}
                           </span>
@@ -353,7 +354,7 @@ const FeedData = () => {
 
                       {/* Action */}
                       <td className="px-3 py-3">
-                        <div className="min-h-[60px] flex items-center">
+                        <div className="h-[60px] flex items-center justify-center">
                           <button
                             onClick={() => handleOptimize(item.id)}
                             className="px-3 py-1 bg-gray-600 text-white rounded hover:bg-blue-700 transition text-sm whitespace-nowrap"

@@ -187,6 +187,41 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Login using an existing JWT token (e.g. from Google OAuth redirect)
+  const loginWithToken = async (token) => {
+    try {
+      if (!token) {
+        throw new Error("No authentication token");
+      }
+
+      // Save token first so verifyAuth / other calls can use it
+      localStorage.setItem("token", token);
+
+      // Verify token and load user
+      const res = await axios.get(`${API}/api/auth/verify`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (res.data.success && res.data.user) {
+        persistUser(res.data.user);
+        // Load accounts after login
+        await syncAccounts();
+        return { success: true };
+      } else {
+        clearSession();
+        return { success: false, message: "Invalid authentication token" };
+      }
+    } catch (err) {
+      clearSession();
+      return {
+        success: false,
+        message: err.response?.data?.message || err.message || "Failed to login with token",
+      };
+    }
+  };
+
   // Logout function
   const logout = () => {
     clearSession();
@@ -414,6 +449,7 @@ const fetchBrands = async () => {
         loading,
         register,
         login,
+        loginWithToken,
         logout,
         fetchProducts,
         isAuthenticated,

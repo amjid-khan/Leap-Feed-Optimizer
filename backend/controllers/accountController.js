@@ -1,5 +1,8 @@
 import Account from "../models/Account.js";
 import User from "../models/User.js";
+import { syncUserAccounts } from "../services/accountSyncService.js";
+import { google } from "googleapis";
+import auth from "../config/googleAuth.js";
 
 const normalizeEmail = (email = "") => email.trim().toLowerCase();
 
@@ -21,18 +24,32 @@ const hasEmailAccess = (account, email) =>
 const userCanAccessAccount = (account, user) =>
     isOwner(account, user._id) || hasEmailAccess(account, user.email);
 
-// Get all accounts for logged-in user
+// Get all accounts for logged-in user (auto-sync on fetch)
 export const getUserAccounts = async (req, res) => {
     try {
+        // Auto-sync accounts first (wait for it to complete)
+        const syncResult = await syncUserAccounts(req.user);
+        
+        if (!syncResult.success) {
+            console.error("[getUserAccounts] Sync error:", syncResult.message);
+            // Continue anyway to return existing accounts
+        } else {
+            console.log(`[getUserAccounts] Sync completed: ${syncResult.message}`);
+        }
+
+        // Fetch accounts after sync (to get newly created ones)
         const accounts = await Account.find(buildAccessQuery(req.user)).sort({
             createdAt: -1,
         });
+
+        console.log(`[getUserAccounts] Returning ${accounts.length} account(s) for user ${req.user.email}`);
 
         res.status(200).json({
             success: true,
             accounts,
         });
     } catch (error) {
+        console.error("[getUserAccounts] Error:", error);
         res.status(500).json({
             success: false,
             message: "Failed to fetch accounts",
@@ -208,6 +225,93 @@ export const switchAccount = async (req, res) => {
         res.status(500).json({
             success: false,
             message: "Failed to switch account",
+            error: error.message,
+        });
+    }
+};
+
+// Manual sync accounts endpoint
+export const syncAccounts = async (req, res) => {
+    try {
+        console.log(`[syncAccounts] Manual sync requested for user ${req.user.email}`);
+        const syncResult = await syncUserAccounts(req.user);
+
+        if (!syncResult.success) {
+            return res.status(500).json({
+                success: false,
+                message: syncResult.message || "Failed to sync accounts",
+            });
+        }
+
+        // Fetch updated accounts
+        const accounts = await Account.find(buildAccessQuery(req.user)).sort({
+            createdAt: -1,
+        });
+
+        res.status(200).json({
+            success: true,
+            message: syncResult.message || "Accounts synced successfully",
+            accounts,
+        });
+    } catch (error) {
+        console.error("[syncAccounts] Error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to sync accounts",
+            error: error.message,
+        });
+    }
+};
+
+// Test merchant ID access endpoint
+export const testMerchantAccess = async (req, res) => {
+    try {
+        const { merchantId } = req.params;
+        
+        if (!merchantId || !/^\d+$/.test(merchantId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid merchant ID format. Must be numeric.",
+            });
+        }
+
+        console.log(`[testMerchantAccess] Testing access for merchant ID: ${merchantId}`);
+
+        const authClient = await auth.getClient();
+        const content = google.content({ version: "v2.1", auth: authClient });
+
+        try {
+            // Try to fetch products
+            const response = await content.products.list({
+                merchantId,
+                maxResults: 1,
+                fields: "resources/id",
+            });
+
+            return res.status(200).json({
+                success: true,
+                message: `Merchant ID ${merchantId} is accessible`,
+                hasAccess: true,
+                data: response.data,
+            });
+        } catch (error) {
+            const errorCode = error.code || error.status || error.response?.status;
+            const errorMessage = error.message || error.response?.data?.error?.message || "Unknown error";
+
+            return res.status(200).json({
+                success: false,
+                message: `Merchant ID ${merchantId} is NOT accessible`,
+                hasAccess: false,
+                errorCode,
+                errorMessage,
+                details: error.response?.data || {},
+            });
+        }
+    } catch (error) {
+        console.error("[testMerchantAccess] Error:", error);
+        res.status(500).json({
+            success: false,
+            message: "Failed to test merchant access",
             error: error.message,
         });
     }
