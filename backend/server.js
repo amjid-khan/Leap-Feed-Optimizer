@@ -2,10 +2,7 @@ import express from 'express';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import authRoutes from "./routes/authRoutes.js";
-import merchantRoutes from "./routes/merchantRoutes.js";
-import productRoutes from "./routes/productRoutes.js";
-import accountRoutes from "./routes/accountRoutes.js";
-import emailMappingRoutes from "./routes/emailMappingRoutes.js";
+
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -39,10 +36,7 @@ app.use(passport.initialize());
 // Routes
 app.use("/api/auth", authRoutes);       // existing email/password auth
 app.use("/api/auth", googleAuthRoutes); // Google OAuth
-app.use("/api/merchant", merchantRoutes);
-app.use("/api/products", productRoutes);
-app.use("/api/accounts", accountRoutes);
-app.use("/api/email-mappings", emailMappingRoutes); // Email to Merchant ID mappings
+
 
 // Connect to MongoDB
 connectDB();
