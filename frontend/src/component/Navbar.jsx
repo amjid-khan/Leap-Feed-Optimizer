@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useNavigate } from "react-router-dom";
-import AccountManagement from "./AccountManagement.jsx";
 
 const Navbar = () => {
   const { user, logout, accounts, selectedAccount, switchAccount } = useAuth();
@@ -20,7 +19,10 @@ const Navbar = () => {
       if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setDropdownOpen(false);
       }
-      if (profileDropdownRef.current && !profileDropdownRef.current.contains(e.target)) {
+      if (
+        profileDropdownRef.current &&
+        !profileDropdownRef.current.contains(e.target)
+      ) {
         setProfileDropdownOpen(false);
       }
     };
@@ -48,7 +50,6 @@ const Navbar = () => {
 
   return (
     <header className="h-16 bg-white shadow-md flex items-center px-6 justify-between z-50 relative">
-
       {/* LEFT: LOGO + TITLE */}
       <div className="flex items-center gap-6">
         <img
@@ -63,7 +64,6 @@ const Navbar = () => {
 
       {/* RIGHT SECTION (Google-style bar) */}
       <div className="flex items-center gap-6">
-
         {/* ACCOUNT NAME + ID + DROPDOWN - Image जैसा Style */}
         <div className="relative" ref={dropdownRef}>
           <div
@@ -120,11 +120,13 @@ const Navbar = () => {
                   Merchant Centre ID: {selectedAccount?.merchantId || ""}
                 </p>
               </div>
-              
+
               {/* Comparison Shopping Service - Image जैसा */}
               <div className="text-xs text-gray-600">
                 <div>Comparison Shopping Service</div>
-                <div className="text-blue-600 font-medium">Google Shopping (google.com/shopping)</div>
+                <div className="text-blue-600 font-medium">
+                  Google Shopping (google.com/shopping)
+                </div>
               </div>
             </div>
 
@@ -153,6 +155,7 @@ const Navbar = () => {
             </div>
 
             {/* Accounts List */}
+            {/* Accounts List */}
             <div className="max-h-64 overflow-y-auto">
               {accounts && accounts.length > 0 ? (
                 <>
@@ -160,11 +163,13 @@ const Navbar = () => {
                     <div
                       key={acc._id}
                       onClick={async () => {
-                        await switchAccount(acc._id);
-                        setDropdownOpen(false);
+                        await switchAccount(acc._id); // Switch account
+                        setDropdownOpen(false); // Close dropdown after switch
                       }}
                       className={`flex items-center p-3 hover:bg-gray-50 cursor-pointer transition ${
-                        selectedAccount?._id === acc._id ? "bg-blue-50 border-r-2 border-blue-500" : ""
+                        selectedAccount?._id === acc._id
+                          ? "bg-blue-50 border-r-2 border-blue-500"
+                          : ""
                       }`}
                     >
                       <div className="flex-1 min-w-0">
@@ -175,7 +180,7 @@ const Navbar = () => {
                           Merchant ID: {acc.merchantId}
                         </p>
                       </div>
-                      
+
                       {/* Checkmark for selected account */}
                       {selectedAccount?._id === acc._id && (
                         <svg
@@ -188,7 +193,7 @@ const Navbar = () => {
                             strokeLinecap="round"
                             strokeLinejoin="round"
                             strokeWidth={2}
-                            d="M5 13l4 4L19-7"
+                            d="M5 13l4 4L19 7"
                           />
                         </svg>
                       )}
@@ -212,7 +217,9 @@ const Navbar = () => {
                       />
                     </svg>
                   </div>
-                  <p className="text-gray-500 text-sm mb-3">No accounts found</p>
+                  <p className="text-gray-500 text-sm mb-3">
+                    No accounts found
+                  </p>
                 </div>
               )}
             </div>
@@ -226,7 +233,9 @@ const Navbar = () => {
                 }}
                 className="flex items-center justify-center p-3 hover:bg-gray-200 cursor-pointer transition"
               >
-                <span className="text-sm text-gray-700 font-medium">Manage accounts</span>
+                <span className="text-sm text-gray-700 font-medium">
+                  Manage accounts
+                </span>
               </div>
             </div>
           </div>
@@ -255,115 +264,115 @@ const Navbar = () => {
 
           {/* PROFILE DROPDOWN MENU - Image जैसा Exact Design */}
           <div
-  className={`absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden transform transition-all duration-200 z-50 ${
-    profileDropdownOpen
-      ? "opacity-100 scale-100 translate-y-0"
-      : "opacity-0 scale-95 pointer-events-none -translate-y-2"
-  }`}
->
-  {/* User Info Section (Redesigned: Email top center, bigger image, name below image) */}
-  <div className="p-4 border-b border-gray-200 text-center">
-    {/* Email Top Center */}
-    <p className="text-sm text-gray-500 truncate mb-2">
-      {user?.email || ""}
-    </p>
+            className={`absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden transform transition-all duration-200 z-50 ${
+              profileDropdownOpen
+                ? "opacity-100 scale-100 translate-y-0"
+                : "opacity-0 scale-95 pointer-events-none -translate-y-2"
+            }`}
+          >
+            {/* User Info Section (Redesigned: Email top center, bigger image, name below image) */}
+            <div className="p-4 border-b border-gray-200 text-center">
+              {/* Email Top Center */}
+              <p className="text-sm text-gray-500 truncate mb-2">
+                {user?.email || ""}
+              </p>
 
-    {/* Bigger Avatar Center */}
-    <div className="flex justify-center mb-2">
-      {hasValidImage ? (
-        <img
-          src={user.image}
-          alt="Profile"
-          className="w-16 h-16 rounded-full object-cover"
-          onError={() => setImageError(true)}
-        />
-      ) : (
-        <div className="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center text-xl font-semibold">
-          {avatarLetter}
-        </div>
-      )}
-    </div>
+              {/* Bigger Avatar Center */}
+              <div className="flex justify-center mb-2">
+                {hasValidImage ? (
+                  <img
+                    src={user.image}
+                    alt="Profile"
+                    className="w-16 h-16 rounded-full object-cover"
+                    onError={() => setImageError(true)}
+                  />
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-blue-600 text-white flex items-center justify-center text-xl font-semibold">
+                    {avatarLetter}
+                  </div>
+                )}
+              </div>
 
-    {/* Name below Image */}
-    <p className="text-sm font-medium text-gray-900 truncate">
-      {user?.name || "User"}
-    </p>
-  </div>
+              {/* Name below Image */}
+              <p className="text-sm font-medium text-gray-900 truncate">
+                {user?.name || "User"}
+              </p>
+            </div>
 
-  {/* Manage Google Account */}
-  <div className="p-1 border-b border-gray-200">
-    <button
-      onClick={() => {
-        setProfileDropdownOpen(false);
-      }}
-      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors text-left"
-    >
-      <svg
-        className="w-5 h-5 text-gray-500"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.36-2.38.996.61 2.296.07 2.572-1.06z"
-        />
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-        />
-      </svg>
-      <span>Manage your Google Account</span>
-    </button>
-  </div>
+            {/* Manage Google Account */}
+            <div className="p-1 border-b border-gray-200">
+              <button
+                onClick={() => {
+                  setProfileDropdownOpen(false);
+                }}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors text-left"
+              >
+                <svg
+                  className="w-5 h-5 text-gray-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.36-2.38.996.61 2.296.07 2.572-1.06z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                </svg>
+                <span>Manage your Google Account</span>
+              </button>
+            </div>
 
-  {/* Logout */}
-  <div className="p-1">
-    <button
-      onClick={handleLogout}
-      className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors text-left"
-    >
-      <svg
-        className="w-5 h-5 text-gray-500"
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-        />
-      </svg>
-      <span>Sign out</span>
-    </button>
-  </div>
+            {/* Logout */}
+            <div className="p-1">
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-100 rounded-md transition-colors text-left"
+              >
+                <svg
+                  className="w-5 h-5 text-gray-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
+                  />
+                </svg>
+                <span>Sign out</span>
+              </button>
+            </div>
 
-  {/* Footer */}
-  <div className="p-4 border-t border-gray-200 bg-gray-50">
-    <div className="flex justify-center gap-4 text-xs">
-      <a href="#" className="text-gray-500 hover:text-gray-700 transition-colors">
-        Privacy Policy
-      </a>
-      <a href="#" className="text-gray-500 hover:text-gray-700 transition-colors">
-        Terms of Service
-      </a>
-    </div>
-  </div>
-</div>
+            {/* Footer */}
+            <div className="p-4 border-t border-gray-200 bg-gray-50">
+              <div className="flex justify-center gap-4 text-xs">
+                <a
+                  href="#"
+                  className="text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  Privacy Policy
+                </a>
+                <a
+                  href="#"
+                  className="text-gray-500 hover:text-gray-700 transition-colors"
+                >
+                  Terms of Service
+                </a>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Account Management Modal */}
-      <AccountManagement
-        isOpen={showAccountManagement}
-        onClose={() => setShowAccountManagement(false)}
-      />
     </header>
   );
 };
