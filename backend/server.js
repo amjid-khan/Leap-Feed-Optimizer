@@ -8,6 +8,7 @@ import { fileURLToPath } from "url";
 import passport from "passport";                   // <-- import passport
 import setupPassport from "./config/passport.js";  // <-- import setupPassport
 import googleAuthRoutes from "./routes/googleAuthRoutes.js"; // <-- Google routes
+import productRoutes from "./routes/productRoutes.js"; // <-- Product routes
 
 dotenv.config();
 
@@ -35,6 +36,7 @@ app.use(passport.initialize());
 // Routes
 app.use("/api/auth", authRoutes);       // existing email/password auth
 app.use("/api/auth", googleAuthRoutes); // Google OAuth
+app.use("/api/merchant", productRoutes);
 
 // Connect to MongoDB
 connectDB();

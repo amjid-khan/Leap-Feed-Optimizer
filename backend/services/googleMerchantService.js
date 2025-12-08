@@ -83,3 +83,58 @@ export const fetchGoogleMerchantAccounts = async (user) => {
         return [];
     }
 };
+
+
+export const fetchGoogleMerchantProducts = async (user, merchantId) => {
+    try {
+        if (!user.googleAccessToken || !user.googleRefreshToken) {
+            console.error("Missing Google tokens for:", user.email);
+            return [];
+        }
+
+        const auth = new google.auth.OAuth2(
+            process.env.GOOGLE_CLIENT_ID,
+            process.env.GOOGLE_CLIENT_SECRET
+        );
+
+        auth.setCredentials({
+            access_token: user.googleAccessToken,
+            refresh_token: user.googleRefreshToken,
+        });
+
+        const content = google.content({ version: "v2.1", auth });
+
+        console.log(`Fetching PRODUCTS for merchant: ${merchantId}`);
+
+        // List all products
+        const response = await content.products.list({
+            merchantId: merchantId,
+            maxResults: 250, // Google API max
+        });
+
+        const products = response.data.resources || [];
+
+        console.log(`Fetched ${products.length} products from merchant ${merchantId}`);
+
+        return products.map(p => ({
+            id: p.id,
+            title: p.title,
+            link: p.link,
+            imageLink: p.imageLink,
+            price: p.price,
+            salePrice: p.salePrice,
+            availability: p.availability,
+            brand: p.brand,
+            gtin: p.gtin,
+            condition: p.condition,
+            productType: p.productType,
+            customLabel0: p.customLabel0,
+            channel: p.channel,
+            offerId: p.offerId,
+            raw: p
+        }));
+    } catch (error) {
+        console.error("Error fetching products:", error.message);
+        return [];
+    }
+};

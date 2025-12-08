@@ -87,6 +87,30 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const loginWithToken = async (token) => {
+  if (!token) return { success: false, message: "No token provided" };
+  localStorage.setItem("token", token);
+
+  try {
+    const res = await axios.get(`${API}/api/auth/verify`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+
+    if (res.data.success && res.data.user) {
+      persistUser(res.data.user);
+      await syncAccounts();
+      return { success: true };
+    } else {
+      clearSession();
+      return { success: false, message: "Invalid token" };
+    }
+  } catch (err) {
+    clearSession();
+    return { success: false, message: err.message };
+  }
+};
+
+
   // Switch account
   const switchAccount = async (accountId) => {
     if (!accountId) return false;
@@ -191,6 +215,7 @@ export const AuthProvider = ({ children }) => {
         logout,
         syncAccounts,
         switchAccount,
+        loginWithToken,
         isAuthenticated: () => !!user && !!localStorage.getItem("token"),
       }}
     >
