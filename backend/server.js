@@ -2,6 +2,10 @@ import express from 'express';
 import dotenv from 'dotenv';
 import connectDB from './config/db.js';
 import authRoutes from "./routes/authRoutes.js";
+<<<<<<< HEAD
+=======
+
+>>>>>>> 3fa0a2ed2ee2fd84e67d144275f2428e3d4f03fe
 import cors from "cors";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -36,7 +40,14 @@ app.use(passport.initialize());
 // Routes
 app.use("/api/auth", authRoutes);       // existing email/password auth
 app.use("/api/auth", googleAuthRoutes); // Google OAuth
+<<<<<<< HEAD
 app.use("/api/merchant", productRoutes);
+=======
+<<<<<<< HEAD
+=======
+
+>>>>>>> 3fa0a2ed2ee2fd84e67d144275f2428e3d4f03fe
+>>>>>>> 9a63498cae85895e3c7140e9873c10b0919bc660
 
 // Connect to MongoDB
 connectDB();
