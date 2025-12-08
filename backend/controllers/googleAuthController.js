@@ -1,9 +1,11 @@
-<<<<<<< HEAD
 import passport from "passport";
 import jwt from "jsonwebtoken";
 import User from "../models/User.js";
 import { fetchGoogleMerchantAccounts } from "../services/googleMerchantService.js";
 
+// -------------------------------
+// GOOGLE LOGIN REDIRECT
+// -------------------------------
 export const googleLoginRedirect = passport.authenticate("google", {
     scope: [
         "https://www.googleapis.com/auth/userinfo.email",
@@ -14,7 +16,9 @@ export const googleLoginRedirect = passport.authenticate("google", {
     prompt: "consent"
 });
 
-
+// -------------------------------
+// GOOGLE LOGIN CALLBACK
+// -------------------------------
 export const googleLoginCallback = async (req, res) => {
     try {
         const user = req.user;
@@ -46,7 +50,7 @@ export const googleLoginCallback = async (req, res) => {
             { expiresIn: "7d" }
         );
 
-        // Return token with merchant account info
+        // Redirect to client with token
         const callbackUrl = `${process.env.CLIENT_URL}/admin?token=${token}`;
         console.log(`\nRedirecting to: ${callbackUrl}`);
         console.log(`========== GOOGLE LOGIN END =========\n`);
@@ -59,13 +63,14 @@ export const googleLoginCallback = async (req, res) => {
     }
 };
 
+// -------------------------------
+// GET MERCHANT ACCOUNTS
+// -------------------------------
 export const getMerchantAccounts = async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
 
-        if (!user) {
-            return res.status(404).json({ error: "User not found" });
-        }
+        if (!user) return res.status(404).json({ error: "User not found" });
 
         res.json({
             accounts: user.googleMerchantAccounts,
@@ -78,21 +83,18 @@ export const getMerchantAccounts = async (req, res) => {
     }
 };
 
+// -------------------------------
+// SELECT MERCHANT ACCOUNT
+// -------------------------------
 export const selectMerchantAccount = async (req, res) => {
     try {
         const { merchantId } = req.body;
         const user = await User.findById(req.user.id);
 
-        if (!user) {
-            return res.status(404).json({ error: "User not found" });
-        }
+        if (!user) return res.status(404).json({ error: "User not found" });
 
-        // Verify account exists in user's accounts
         const accountExists = user.googleMerchantAccounts.some(acc => acc.id === merchantId);
-
-        if (!accountExists) {
-            return res.status(400).json({ error: "Merchant account not found" });
-        }
+        if (!accountExists) return res.status(400).json({ error: "Merchant account not found" });
 
         user.selectedAccount = merchantId;
         await user.save();
@@ -105,37 +107,28 @@ export const selectMerchantAccount = async (req, res) => {
         console.error("Error selecting merchant account:", error.message);
         res.status(500).json({ error: "Failed to select merchant account" });
     }
-=======
-import jwt from "jsonwebtoken";
+};
 
-// Redirect handler is handled by passport in the route; this file provides callback and failure handlers.
-export const googleAuthCallback = (req, res) => {
-	try {
-		if (!req.user) {
-			return res.redirect("/auth/google/failure");
-		}
+// -------------------------------
+// OPTIONAL: SIMPLE CALLBACK & FAILURE HANDLERS
+// -------------------------------
+export const googleAuthCallbackSimple = (req, res) => {
+    try {
+        if (!req.user) return res.redirect("/auth/google/failure");
 
-		const token = jwt.sign(
-			{ id: req.user._id, email: req.user.email },
-			process.env.JWT_SECRET,
-			{ expiresIn: "1d" }
-		);
+        const token = jwt.sign(
+            { id: req.user._id, email: req.user.email },
+            process.env.JWT_SECRET,
+            { expiresIn: "1d" }
+        );
 
-		// Redirect to client with token (client should extract and store it)
-		return res.redirect(`${process.env.CLIENT_URL}/?token=${token}`);
-	} catch (err) {
-		console.error("Google callback error:", err);
-		return res.redirect("/auth/google/failure");
-	}
+        return res.redirect(`${process.env.CLIENT_URL}/?token=${token}`);
+    } catch (err) {
+        console.error("Google callback error:", err);
+        return res.redirect("/auth/google/failure");
+    }
 };
 
 export const googleAuthFailure = (req, res) => {
-	// Give a friendly message for failures; client can handle `/auth/google/failure` route
-	return res.status(401).json({ success: false, message: "Google authentication failed" });
-};
-
-export default {
-	googleAuthCallback,
-	googleAuthFailure,
->>>>>>> 3fa0a2ed2ee2fd84e67d144275f2428e3d4f03fe
+    return res.status(401).json({ success: false, message: "Google authentication failed" });
 };

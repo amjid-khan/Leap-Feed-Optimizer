@@ -10,14 +10,9 @@ export const AuthProvider = ({ children }) => {
   const [accounts, setAccounts] = useState([]);
   const [selectedAccount, setSelectedAccount] = useState(null);
 
-<<<<<<< HEAD
-  // Persist user in state + localStorage
-=======
   // -------------------------------
   // HELPER FUNCTIONS
   // -------------------------------
-
->>>>>>> 3fa0a2ed2ee2fd84e67d144275f2428e3d4f03fe
   const persistUser = (userData) => {
     if (userData) {
       setUser(userData);
@@ -35,113 +30,6 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("token");
   };
 
-<<<<<<< HEAD
-  // Fetch accounts from backend
-  const syncAccounts = async () => {
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) return { success: false };
-
-      const res = await axios.get(`${API}/api/auth/merchant-accounts`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const accountsList = res.data?.accounts || [];
-
-      const normalized = accountsList.map((a) => ({
-        _id: a._id || a.id || `${a.id}`,
-        accountName: a.name || a.accountName || "Unnamed Account",
-        merchantId: a.id || a.merchantId || a._id || null,
-        websiteUrl: a.websiteUrl || "",
-        email: a.email || "",
-        businessType: a.businessType || "",
-        status: a.status || "",
-        raw: a,
-      }));
-
-      setAccounts(normalized);
-
-      if (normalized.length === 0) {
-        setSelectedAccount(null);
-        updateUserSelectedAccount(null);
-        return { success: true, accounts: [] };
-      }
-
-      // Restore previously selected account or first
-      const preferredMerchantId = user?.selectedAccount;
-      let preferredAccount = normalized.find(acc => acc.merchantId === preferredMerchantId);
-
-      if (!preferredAccount) {
-        preferredAccount = normalized[0];
-      }
-
-      // Set selectedAccount state **before persisting**
-      setSelectedAccount(preferredAccount);
-      updateUserSelectedAccount(preferredAccount.merchantId);
-
-      return { success: true, accounts: normalized };
-    } catch (err) {
-      console.error("Error loading accounts:", err);
-      return { success: false, message: err.message };
-    }
-  };
-
-  const loginWithToken = async (token) => {
-  if (!token) return { success: false, message: "No token provided" };
-  localStorage.setItem("token", token);
-
-  try {
-    const res = await axios.get(`${API}/api/auth/verify`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-
-    if (res.data.success && res.data.user) {
-      persistUser(res.data.user);
-      await syncAccounts();
-      return { success: true };
-    } else {
-      clearSession();
-      return { success: false, message: "Invalid token" };
-    }
-  } catch (err) {
-    clearSession();
-    return { success: false, message: err.message };
-  }
-};
-
-
-  // Switch account
-  const switchAccount = async (accountId) => {
-    if (!accountId) return false;
-
-    const accountToSwitch =
-      accounts.find(acc => acc._id === accountId) ||
-      accounts.find(acc => acc.merchantId === accountId);
-
-    if (!accountToSwitch) return false;
-
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) throw new Error("No auth token");
-
-      const res = await axios.post(
-        `${API}/api/auth/select-account`,
-        { merchantId: accountId },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      if (res.data.success) {
-        // Update selectedAccount state **immediately**
-        setSelectedAccount(accountToSwitch);
-        updateUserSelectedAccount(accountToSwitch.merchantId);
-
-        return true;
-      }
-      return false;
-    } catch (err) {
-      console.error("Error switching account:", err);
-      return false;
-=======
   const updateUserSelectedAccount = (accountId) => {
     setUser((prev) => {
       if (!prev) return prev;
@@ -154,7 +42,6 @@ export const AuthProvider = ({ children }) => {
   // -------------------------------
   // ACCOUNT SYNC
   // -------------------------------
-
   const syncAccounts = async () => {
     try {
       const token = localStorage.getItem("token");
@@ -186,19 +73,16 @@ export const AuthProvider = ({ children }) => {
       }
     } catch (e) {
       console.log("Account sync failed:", e);
->>>>>>> 3fa0a2ed2ee2fd84e67d144275f2428e3d4f03fe
     }
   };
 
   // -------------------------------
   // ACCOUNT SWITCH
   // -------------------------------
-
   const switchAccount = async (accountId) => {
     try {
       const token = localStorage.getItem("token");
-<<<<<<< HEAD
-=======
+      if (!token) throw new Error("No auth token");
 
       const res = await axios.post(
         `${API}/api/accounts/${accountId}/switch`,
@@ -221,11 +105,9 @@ export const AuthProvider = ({ children }) => {
   // -------------------------------
   // AUTH VERIFY ON MOUNT
   // -------------------------------
-
   useEffect(() => {
     const verifyUser = async () => {
       const token = localStorage.getItem("token");
->>>>>>> 3fa0a2ed2ee2fd84e67d144275f2428e3d4f03fe
       if (!token) {
         clearSession();
         setLoading(false);
@@ -239,34 +121,15 @@ export const AuthProvider = ({ children }) => {
 
         if (res.data.success) {
           persistUser(res.data.user);
-<<<<<<< HEAD
-        } else clearSession();
-      } catch (err) {
-=======
         } else {
           clearSession();
         }
       } catch {
->>>>>>> 3fa0a2ed2ee2fd84e67d144275f2428e3d4f03fe
         clearSession();
       } finally {
         setLoading(false);
       }
     };
-<<<<<<< HEAD
-    verifyAuth();
-  }, []);
-
-  // Load accounts when user changes
-  useEffect(() => {
-    if (user && !loading) syncAccounts();
-  }, [user, loading]);
-
-  const register = async (name, email, password) => {
-    try {
-      const res = await axios.post(`${API}/api/auth/register`, { name, email, password });
-      persistUser(res.data.user);
-=======
 
     verifyUser();
   }, []);
@@ -274,7 +137,6 @@ export const AuthProvider = ({ children }) => {
   // -------------------------------
   // Load accounts after user is loaded
   // -------------------------------
-
   useEffect(() => {
     if (user && !loading) {
       syncAccounts();
@@ -284,7 +146,6 @@ export const AuthProvider = ({ children }) => {
   // -------------------------------
   // AUTH FUNCTIONS
   // -------------------------------
-
   const register = async (name, email, password) => {
     try {
       const res = await axios.post(`${API}/api/auth/register`, {
@@ -292,38 +153,20 @@ export const AuthProvider = ({ children }) => {
         email,
         password,
       });
->>>>>>> 3fa0a2ed2ee2fd84e67d144275f2428e3d4f03fe
       localStorage.setItem("token", res.data.token);
       persistUser(res.data.user);
       await syncAccounts();
       return { success: true, user: res.data.user };
     } catch (err) {
-<<<<<<< HEAD
-      return { success: false, message: err.message };
-=======
       return { 
         success: false, 
         message: err.response?.data?.message || "Registration failed" 
       };
->>>>>>> 3fa0a2ed2ee2fd84e67d144275f2428e3d4f03fe
     }
   };
 
   const login = async (email, password) => {
     try {
-<<<<<<< HEAD
-      const res = await axios.post(`${API}/api/auth/login`, { email, password });
-      persistUser(res.data.user);
-      localStorage.setItem("token", res.data.token);
-      await syncAccounts();
-      return { success: true };
-    } catch (err) {
-      return { success: false, message: err.message };
-    }
-  };
-
-  const logout = () => clearSession();
-=======
       const res = await axios.post(`${API}/api/auth/login`, {
         email,
         password,
@@ -380,33 +223,19 @@ export const AuthProvider = ({ children }) => {
   // -------------------------------
   // RETURN CONTEXT
   // -------------------------------
->>>>>>> 3fa0a2ed2ee2fd84e67d144275f2428e3d4f03fe
-
   return (
     <AuthContext.Provider
       value={{
         user,
         loading,
-<<<<<<< HEAD
         accounts,
         selectedAccount,
         register,
         login,
-        logout,
-        syncAccounts,
-        switchAccount,
-        loginWithToken,
-        isAuthenticated: () => !!user && !!localStorage.getItem("token"),
-=======
-        login,
-        register,
         loginWithToken,
         logout,
-        accounts,
-        selectedAccount,
         switchAccount,
         isAuthenticated
->>>>>>> 3fa0a2ed2ee2fd84e67d144275f2428e3d4f03fe
       }}
     >
       {children}
@@ -414,8 +243,4 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-<<<<<<< HEAD
 export const useAuth = () => useContext(AuthContext);
-=======
-export const useAuth = () => useContext(AuthContext);
->>>>>>> 3fa0a2ed2ee2fd84e67d144275f2428e3d4f03fe
